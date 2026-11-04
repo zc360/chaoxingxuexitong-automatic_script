@@ -12,6 +12,7 @@
 // @run-at       document-start
 // @grant        none
 // @sandbox      raw
+// @license      GPL-3.0-or-later
 // ==/UserScript==
 
 (() => {
