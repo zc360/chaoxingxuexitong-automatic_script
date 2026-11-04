@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         学习通：后台播放与结束后下一节两次
+// @name         学习通：允许后台播放与自动播放下个视频以及自动静音
 // @namespace    local.chaoxing.background
 // @version      1.2.0
-// @description  防止失焦暂停；视频结束后点击两次下一节、确认章节提示，并静音自动播放新视频。
+// @description  适用于超星学习通：防止失焦自动暂停视频，播放结束后自动播放下个视频，自动静音播放新视频。
 // @match        https://*.chaoxing.com/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/mooc-ans/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/knowledge/cards*
