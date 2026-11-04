@@ -1,8 +1,10 @@
 # 学习通后台播放油猴脚本
 
 脚本文件：`chaoxing-background.user.js`
+[GitHub仓库](https://github.com/zc360/chaoxingxuexitong-automatic_script)
+[Greasyfork地址](https://greasyfork.org/zh-CN/scripts/603744-%E5%AD%A6%E4%B9%A0%E9%80%9A-%E5%85%81%E8%AE%B8%E5%90%8E%E5%8F%B0%E6%92%AD%E6%94%BE%E4%B8%8E%E8%87%AA%E5%8A%A8%E6%92%AD%E6%94%BE%E4%B8%8B%E4%B8%AA%E8%A7%86%E9%A2%91%E4%BB%A5%E5%8F%8A%E8%87%AA%E5%8A%A8%E9%9D%99%E9%9F%B3)
 
-## 如何使用
+## 如何使用（适用于GitHub用户）
 
 1. 在 Edge / Chrome 安装官方扩展商店中的 Tampermonkey（篡改猴）。
 2. 打开扩展面板 → 添加新脚本，将 `chaoxing-background.user.js` 全部内容粘贴进去，按 Ctrl+S 保存。
