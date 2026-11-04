@@ -1,0 +1,2 @@
+# chaoxingxuexitong-automatic_script
+适用于超星学习通的自动网课油猴脚本
