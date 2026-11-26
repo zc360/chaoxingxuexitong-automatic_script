@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习通网课多功能插件
 // @namespace    local.chaoxing.multi-video
-// @version      2.1.0
+// @version      2.1.1
 // @description  学习通自动播放视频，多视频同时播放（仅适用于同一标签页内多个视频和多个窗口不同标签页，不能同一窗口多标签页播放），切到后台保持播放，去除鼠标移出检测，新视频自动静音。
 // @match        https://*.chaoxing.com/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/mooc-ans/mycourse/studentstudy*
@@ -247,14 +247,20 @@
             document.body.append(panel); const toggle = document.createElement('button'); toggle.id = 'cx-glass-toggle'; toggle.textContent = '⚙'; toggle.title = '打开设置'; document.body.append(toggle); panel.querySelector('.cx-github').prepend(makeGithubIcon());
             const drag = (element, handle) => {
                 let active = false, moved = false, startX = 0, startY = 0, originX = 0, originY = 0;
+                const finish = event => {
+                    if (!active) return;
+                    active = false;
+                    if (event?.pointerId != null) element.releasePointerCapture?.(event.pointerId);
+                };
                 handle.addEventListener('pointerdown', event => {
                     if (event.button !== 0) return;
                     active = true; moved = false; startX = event.clientX; startY = event.clientY;
                     const rect = element.getBoundingClientRect(); originX = rect.left; originY = rect.top;
                     element.setPointerCapture?.(event.pointerId);
                 });
-                handle.addEventListener('pointermove', event => {
+                element.addEventListener('pointermove', event => {
                     if (!active) return;
+                    if (event.buttons !== 1) { finish(event); return; }
                     const dx = event.clientX - startX; const dy = event.clientY - startY;
                     if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
                     if (!moved) return;
@@ -262,7 +268,10 @@
                     element.style.top = Math.max(8, Math.min(window.innerHeight - element.offsetHeight - 8, originY + dy)) + 'px';
                     element.style.right = 'auto'; element.style.bottom = 'auto';
                 });
-                handle.addEventListener('pointerup', event => { active = false; element.releasePointerCapture?.(event.pointerId); });
+                element.addEventListener('pointerup', finish);
+                element.addEventListener('pointercancel', finish);
+                window.addEventListener('pointerup', finish, true);
+                window.addEventListener('pointercancel', finish, true);
                 handle.addEventListener('click', event => { if (moved) { event.preventDefault(); event.stopImmediatePropagation(); moved = false; } }, true);
             };
             drag(panel, panel.querySelector('header')); drag(toggle, toggle);
