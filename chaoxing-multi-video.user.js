@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习通：多视频多窗口同时播放与去除鼠标移出检测
 // @namespace    local.chaoxing.multi-video
-// @version      1.4.2
+// @version      1.4.3
 // @description  学习通多视频同时播放（仅适用于同一标签页内多个视频和多个窗口不同标签页，不能同一窗口多标签页播放），切到后台保持播放，去除鼠标移出检测，新视频自动静音。
 // @match        https://*.chaoxing.com/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/mooc-ans/mycourse/studentstudy*
