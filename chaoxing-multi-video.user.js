@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习通网课多功能插件
 // @namespace    local.chaoxing.multi-video
-// @version      2.1.1
+// @version      2.1.2
 // @description  学习通自动播放视频，多视频同时播放（仅适用于同一标签页内多个视频和多个窗口不同标签页，不能同一窗口多标签页播放），切到后台保持播放，去除鼠标移出检测，新视频自动静音。
 // @match        https://*.chaoxing.com/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/mooc-ans/mycourse/studentstudy*
@@ -180,6 +180,7 @@
 
     if (window === window.top && /\/studentstudy\b/.test(location.pathname)) {
         let busy = false, cancelled = false, status, panel;
+        const UI_POSITION_KEY = 'cx-multi-video-ui-position-v1';
         const watched = new WeakSet();
         const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
         const visible = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
@@ -239,12 +240,38 @@
             panel.querySelectorAll('[data-setting]').forEach(input => { const key = input.dataset.setting; if (input.type === 'checkbox') input.checked = Boolean(settings[key]); else input.value = String(settings[key]); });
             panel.querySelectorAll('.cx-switch').forEach(button => button.setAttribute('aria-checked', String(Boolean(settings[button.dataset.setting]))));
         }
+        function readUiPosition() {
+            try {
+                const value = JSON.parse(localStorage.getItem(UI_POSITION_KEY) || 'null');
+                return Number.isFinite(value?.left) && Number.isFinite(value?.top) ? value : null;
+            } catch (_) { return null; }
+        }
+        let uiPosition = readUiPosition();
+        function applyUiPosition(left, top, source) {
+            const width = source?.offsetWidth || panel?.offsetWidth || 330;
+            const height = source?.offsetHeight || panel?.offsetHeight || 80;
+            const next = {
+                left: Math.max(8, Math.min(window.innerWidth - width - 8, left)),
+                top: Math.max(8, Math.min(window.innerHeight - height - 8, top))
+            };
+            uiPosition = next;
+            for (const element of [panel, document.querySelector('#cx-glass-toggle')]) {
+                if (!element) continue;
+                element.style.left = `${next.left}px`;
+                element.style.top = `${next.top}px`;
+                element.style.right = 'auto';
+                element.style.bottom = 'auto';
+            }
+            try { localStorage.setItem(UI_POSITION_KEY, JSON.stringify(next)); } catch (_) { /* 位置只保留在当前页面。 */ }
+        }
         function createUi() {
             if (!document.body || panel) return;
             const style = document.createElement('style'); style.textContent = "#cx-glass-panel{position:fixed;right:24px;bottom:24px;width:330px;z-index:2147483647;color:#172033;font:14px/1.5 -apple-system,BlinkMacSystemFont,\"Segoe UI\",sans-serif;letter-spacing:.01em;background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.16) 48%,rgba(225,238,255,.25));border:1px solid rgba(255,255,255,.72);border-radius:28px;box-shadow:0 24px 70px rgba(24,45,78,.28),0 2px 8px rgba(255,255,255,.6) inset,-1px -1px 12px rgba(255,255,255,.28) inset;backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);overflow:hidden;isolation:isolate}#cx-glass-panel:before{content:\"\";position:absolute;inset:-45%;z-index:-1;background:conic-gradient(from 210deg at 35% 35%,rgba(255,255,255,.55),rgba(153,203,255,.2),rgba(255,181,226,.2),rgba(255,255,255,.48));filter:blur(28px);opacity:.72;pointer-events:none}#cx-glass-panel:after{content:\"\";position:absolute;inset:0;z-index:-1;background:radial-gradient(circle at 12% 0,rgba(255,255,255,.72),transparent 32%),radial-gradient(circle at 100% 100%,rgba(122,181,255,.18),transparent 42%);pointer-events:none}#cx-glass-panel>*{position:relative}#cx-glass-panel header{display:flex;justify-content:space-between;align-items:center;padding:18px 18px 12px;cursor:grab;user-select:none}#cx-glass-panel header:active{cursor:grabbing}#cx-glass-panel h2{margin:0;color:#101a2d;font-size:16px;font-weight:700}#cx-glass-panel .cx-sub{margin:2px 0 0;color:#3f4d64;font-size:11px}.cx-body{padding:0 14px 15px}.cx-row{display:flex;align-items:center;justify-content:space-between;padding:11px 5px;border-top:1px solid rgba(37,57,87,.14)}.cx-row label{color:#172033;font-weight:560;cursor:pointer}.cx-switch{width:42px;height:25px;border:1px solid rgba(31,48,76,.18);border-radius:20px;background:rgba(39,59,89,.2);padding:2px;transition:.2s;cursor:pointer}.cx-switch:after{content:\"\";display:block;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(17,31,55,.28);transition:.2s}.cx-switch[aria-checked=\"true\"]{background:#1677e8;border-color:#1677e8}.cx-switch[aria-checked=\"true\"]:after{transform:translateX(17px)}#cx-glass-panel select{color:#172033;background:rgba(255,255,255,.48);border:1px solid rgba(31,48,76,.2);border-radius:10px;padding:5px 7px}#cx-glass-panel option{color:#111}.cx-tools{display:flex;gap:8px;margin-top:10px}.cx-tool{flex:1;border:1px solid rgba(31,48,76,.2);border-radius:12px;padding:8px 9px;background:rgba(255,255,255,.36);color:#172033;font-weight:600;cursor:pointer}.cx-tool:hover{background:rgba(255,255,255,.62)}.cx-github{display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}.cx-github svg{width:17px;height:17px}.cx-status{margin:10px 4px 0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.3);color:#33425a;font-size:12px;min-height:17px}#cx-glass-toggle{position:fixed;right:24px;bottom:24px;z-index:2147483647;display:none;border:1px solid rgba(255,255,255,.78);border-radius:50%;width:48px;height:48px;background:linear-gradient(135deg,rgba(255,255,255,.52),rgba(191,220,255,.28));color:#172033;box-shadow:0 14px 35px rgba(24,45,78,.25),inset 0 1px 5px rgba(255,255,255,.75);backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);cursor:grab;font-size:20px}#cx-glass-toggle:active{cursor:grabbing}"; document.head.append(style);
             panel = document.createElement('section'); panel.id = 'cx-glass-panel'; panel.setAttribute('aria-label', '学习通网课插件设置');
             panel.innerHTML = '<header><div><h2>学习通网课插件</h2><p class="cx-sub">开发者：zc360</p></div><button class="cx-tool" data-all>全部打开</button></header><div class="cx-body">' + [['mouseLeave','鼠标离开窗口检测'],['autoMute','自动静音'],['multiVideo','多视频同时播放'],['autoNext','自动点击下一节']].map(([key,label]) => `<div class="cx-row"><label>${label}</label><button class="cx-switch" type="button" role="switch" data-setting="${key}" aria-checked="false"></button></div>`).join('') + '<div class="cx-row"><label>下一节点击次数</label><select data-setting="nextClicks"><option value="1">1 次</option><option value="2">2 次</option><option value="3">3 次</option><option value="4">4 次</option><option value="5">5 次</option></select></div><div class="cx-tools"><a class="cx-tool cx-github" href="https://github.com/zc360/chaoxingxuexitong-automatic_script" target="_blank" rel="noopener noreferrer" aria-label="打开 GitHub 项目"></a><button class="cx-tool" data-hide>隐藏面板</button></div><div class="cx-status" data-status>设置已保存</div></div>';
             document.body.append(panel); const toggle = document.createElement('button'); toggle.id = 'cx-glass-toggle'; toggle.textContent = '⚙'; toggle.title = '打开设置'; document.body.append(toggle); panel.querySelector('.cx-github').prepend(makeGithubIcon());
+            const initialPosition = uiPosition || { left: panel.getBoundingClientRect().left, top: panel.getBoundingClientRect().top };
+            applyUiPosition(initialPosition.left, initialPosition.top, panel);
             const drag = (element, handle) => {
                 let active = false, moved = false, startX = 0, startY = 0, originX = 0, originY = 0;
                 const finish = event => {
@@ -264,9 +291,7 @@
                     const dx = event.clientX - startX; const dy = event.clientY - startY;
                     if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
                     if (!moved) return;
-                    element.style.left = Math.max(8, Math.min(window.innerWidth - element.offsetWidth - 8, originX + dx)) + 'px';
-                    element.style.top = Math.max(8, Math.min(window.innerHeight - element.offsetHeight - 8, originY + dy)) + 'px';
-                    element.style.right = 'auto'; element.style.bottom = 'auto';
+                    applyUiPosition(originX + dx, originY + dy, element);
                 });
                 element.addEventListener('pointerup', finish);
                 element.addEventListener('pointercancel', finish);
@@ -276,7 +301,12 @@
             };
             drag(panel, panel.querySelector('header')); drag(toggle, toggle);
             panel.querySelectorAll('.cx-switch').forEach(button => button.addEventListener('click', () => { const key = button.dataset.setting; saveSettings({ [key]: !settings[key] }); refreshUi(); }));
-            panel.querySelector('[data-all]').addEventListener('click', () => { saveSettings({ mouseLeave: true, autoMute: true, multiVideo: true, autoNext: true }); refreshUi(); });
+            panel.querySelector('[data-all]').addEventListener('click', event => {
+                event.preventDefault();
+                saveSettings({ mouseLeave: true, autoMute: true, multiVideo: true, autoNext: true });
+                status.textContent = '全部功能已打开';
+                refreshUi();
+            });
             panel.querySelector('[data-hide]').addEventListener('click', () => { panel.style.display = 'none'; toggle.style.display = 'block'; }); toggle.addEventListener('click', () => { panel.style.display = 'block'; toggle.style.display = 'none'; });
             panel.querySelector('[data-setting="nextClicks"]').addEventListener('change', event => { saveSettings({ nextClicks: event.target.value }); refreshUi(); }); status = panel.querySelector('[data-status]'); refreshUi();
         }
