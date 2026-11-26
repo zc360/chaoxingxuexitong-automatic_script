@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         学习通网课多功能插件
 // @namespace    local.chaoxing.multi-video
-// @version      2.1.3
+// @version      2.1.4
 // @description  学习通自动播放视频，多视频同时播放（仅适用于同一标签页内多个视频和多个窗口不同标签页，不能同一窗口多标签页播放），切到后台保持播放，去除鼠标移出检测，新视频自动静音。
 // @match        https://*.chaoxing.com/mycourse/studentstudy*
 // @match        https://*.chaoxing.com/mooc-ans/mycourse/studentstudy*
@@ -294,6 +294,7 @@
                 };
                 handle.addEventListener('pointerdown', event => {
                     if (event.button !== 0) return;
+                    if (event.target.closest?.('button, a, select, input, textarea')) return;
                     active = true; moved = false; startX = event.clientX; startY = event.clientY;
                     const rect = element.getBoundingClientRect(); originX = rect.left; originY = rect.top;
                     element.setPointerCapture?.(event.pointerId);
